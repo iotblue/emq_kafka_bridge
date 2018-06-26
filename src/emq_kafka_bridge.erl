@@ -108,16 +108,15 @@ on_session_terminated(ClientId, Username, Reason, _Env) ->
 on_message_publish(Message = #mqtt_message{topic = <<"$SYS/", _/binary>>}, _Env) ->
     {ok, Message}.
 
-on_message_publish(Message, _Env) ->
+on_message_publish(Message = #mqtt_message{topic = Topic}, _Env) ->
     io:format("publish ~s~n", [emqttd_message:format(Message)]),
-    Topic = Message#mqtt_message.topic,
     Dup = Message#mqtt_message.dup,
     Retain = Message#mqtt_message.retain,
     Payload = Message#mqtt_message.payload,
     From = Message#mqtt_message.from,
     Qos = Message#mqtt_message.qos,
     PkgId = Message#mqtt_message.pktid,
-    {ClientId, Username} = From,
+    {ClientId} = From,
     Str0 = <<"{\"topic\":\"">>,
     Str1 = <<"\", \"deviceId\":\"">>,
     Str2 = <<"\", \"payload\":[">>,
