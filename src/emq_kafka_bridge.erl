@@ -53,7 +53,7 @@ load(Env) ->
     emqttd:hook('message.acked', fun ?MODULE:on_message_acked/4, [Env]).
 
 on_client_connected(ConnAck, Client = #mqtt_client{client_id = ClientId}, _Env) ->
-    io:format("client ~s connected, connack: ~w~n", [ClientId, ConnAck]),
+    % io:format("client ~s connected, connack: ~w~n", [ClientId, ConnAck]),
     ConnectionTs = emqttd_time:now_to_secs(),
     ConnectionType = <<"connected">>,
     Str0 = <<"{\"deviceId\":\"">>,
@@ -67,7 +67,7 @@ on_client_connected(ConnAck, Client = #mqtt_client{client_id = ClientId}, _Env) 
     {ok, Client}.
 
 on_client_disconnected(Reason, _Client = #mqtt_client{client_id = ClientId}, _Env) ->
-    io:format("client ~s disconnected, reason: ~w~n", [ClientId, Reason]),
+    % io:format("client ~s disconnected, reason: ~w~n", [ClientId, Reason]),
     ConnectionTs = emqttd_time:now_to_secs(),
     ConnectionType = <<"disconnected">>,
     Str0 = <<"{\"deviceId\":\"">>,
@@ -81,40 +81,42 @@ on_client_disconnected(Reason, _Client = #mqtt_client{client_id = ClientId}, _En
     ok.
 
 on_client_subscribe(ClientId, Username, TopicTable, _Env) ->
-    io:format("client(~s/~s) will subscribe: ~p~n", [Username, ClientId, TopicTable]),
+    % io:format("client(~s/~s) will subscribe: ~p~n", [Username, ClientId, TopicTable]),
     {ok, TopicTable}.
     
 on_client_unsubscribe(ClientId, Username, TopicTable, _Env) ->
-    io:format("client(~s/~s) unsubscribe ~p~n", [ClientId, Username, TopicTable]),
+    % io:format("client(~s/~s) unsubscribe ~p~n", [ClientId, Username, TopicTable]),
     {ok, TopicTable}.
 
 on_session_created(ClientId, Username, _Env) ->
-    io:format("session(~s/~s) created.", [ClientId, Username]).
+    io:format("session(~s/~s) created.", [ClientId, Username]),
+    {ok, ClientId}.
 
 on_session_subscribed(ClientId, Username, {Topic, Opts}, _Env) ->
-    io:format("session(~s/~s) subscribed: ~p~n", [Username, ClientId, {Topic, Opts}]),
+    % io:format("session(~s/~s) subscribed: ~p~n", [Username, ClientId, {Topic, Opts}]),
     {ok, {Topic, Opts}}.
 
 on_session_unsubscribed(ClientId, Username, {Topic, Opts}, _Env) ->
-    io:format("session(~s/~s) unsubscribed: ~p~n", [Username, ClientId, {Topic, Opts}]),
+    % io:format("session(~s/~s) unsubscribed: ~p~n", [Username, ClientId, {Topic, Opts}]),
     ok.
 
 on_session_terminated(ClientId, Username, Reason, _Env) ->
-    io:format("session(~s/~s) terminated: ~p.", [ClientId, Username, Reason]).
+    % io:format("session(~s/~s) terminated: ~p.", [ClientId, Username, Reason])
+    {ok, Reason}.
 
 %% transform message and return
 on_message_publish(Message = #mqtt_message{topic = <<"$SYS/", _/binary>>}, _Env) ->
-    {ok, Message};
+    {ok, Message}.
 
-on_message_publish(Message = #mqtt_message{pktid   = PkgId,
-                        qos     = Qos,
-                        retain  = Retain,
-                        dup     = Dup,
-                        topic   = Topic,
-                        payload = Payload,
-                        from = From
-						}, _Env) ->
+on_message_publish(Message, _Env) ->
     io:format("publish ~s~n", [emqttd_message:format(Message)]),
+    Topic = Message#mqtt_message.topic,
+    Dup = Message#mqtt_message.dup,
+    Retain = Message#mqtt_message.retain,
+    Payload = Message#mqtt_message.payload,
+    From = Message#mqtt_message.from,
+    Qos = Message#mqtt_message.qos,
+    PkgId = Message#mqtt_message.pktid,
     {ClientId, Username} = From,
     Str0 = <<"{\"topic\":\"">>,
     Str1 = <<"\", \"deviceId\":\"">>,
@@ -128,11 +130,11 @@ on_message_publish(Message = #mqtt_message{pktid   = PkgId,
 
 
 on_message_delivered(ClientId, Username, Message, _Env) ->
-    io:format("delivered to client(~s/~s): ~s~n", [Username, ClientId, emqttd_message:format(Message)]),
+    % io:format("delivered to client(~s/~s): ~s~n", [Username, ClientId, emqttd_message:format(Message)]),
     {ok, Message}.
 
 on_message_acked(ClientId, Username, Message, _Env) ->
-    io:format("client(~s/~s) acked: ~s~n", [Username, ClientId, emqttd_message:format(Message)]),
+    % io:format("client(~s/~s) acked: ~s~n", [Username, ClientId, emqttd_message:format(Message)]),
     {ok, Message}.
 
 ekaf_init(_Env) ->
@@ -141,8 +143,8 @@ ekaf_init(_Env) ->
     PartitionStrategy= proplists:get_value(partition_strategy, Values),
     application:set_env(ekaf, ekaf_partition_strategy, PartitionStrategy),
     application:set_env(ekaf, ekaf_bootstrap_broker, BootstrapBroker),
-    {ok, _} = application:ensure_all_started(ekaf),
-    io:format("Initialized ekaf with ~p~n", [{"localhost", 9092}]).
+    {ok, _} = application:ensure_all_started(ekaf).
+    % ,io:format("Initialized ekaf with ~p~n", [{"localhost", 9092}]).
 
 %% Called when the plugin application stop
 unload() ->
