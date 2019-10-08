@@ -19,11 +19,14 @@
 -include_lib("emqx/include/emqx.hrl").
 -include_lib("emqx/include/logger.hrl").
 
--define(LOG(Level, Format, Args), emqx_logger:Level("KafkaBridge: " ++ Format, Args)).
-
--export([ load/1
+-export([ register_metrics/0
+        , load/1
         , unload/0
         ]).
+
+register_metrics() ->
+    [emqx_metrics:new(MetricName) || MetricName <- ['bridge.kafka.connected', 'bridge.kafka.disconnected', 'bridge.kafka.publish']].
+
 
 %% Hooks functions
 -export([ 
@@ -54,10 +57,12 @@ brod_load(_Env) ->
     ClientConfig = [{auto_start_producers, true}, {default_producer_config, []}, {reconnect_cool_down_seconds, 10}, {reconnect_cool_down_seconds, 10}],
     ok = brod:start_client(KafkaBootstrapEndpoints, brod_client_1, ClientConfig),
     ok = brod:start_producer(brod_client_1, <<"message_publish">>, _ProducerConfig = []),
+    emqx_metrics:inc('bridge.kafka.connected'),
     io:format("load brod with ~p~n", [KafkaBootstrapEndpoints]).
 
 brod_unload() ->
     application:stop(brod),
+    emqx_metrics:inc('bridge.kafka.disconnected'),
     io:format("unload brod~n"),
     ok.
 
@@ -71,22 +76,10 @@ produce_kafka_message(Topic, Message, ClientId, _Env) ->
     Key = iolist_to_binary(ClientId),
     Partition = getPartition(Key),
     Message1 = jsx:encode(Message),
-    ?LOG(debug, "Topic:~p, params:~s", [Topic, Message1]),
+    ?LOG(error, "Topic:~p, params:~p", [Topic, Message1]),
     ok = brod:produce_sync(brod_client_1, Topic, Partition, ClientId, Message1),
+    emqx_metrics:inc('bridge.kafka.publish'),
     ok.
-
-% produce_kafka_message_async(Topic, Message, ClientId, _Env) ->
-%     Key = iolist_to_binary(ClientId),
-%     Partition = getPartition(Key),
-%     Message1 = jsx:encode(Message),
-%     ?LOG(debug, "Topic:~p, params:~s", [Topic, Message1]),
-%     {ok, CallRef} = brod:produce(brod_client_1, Topic, Partition, ClientId, Message1),
-%     receive
-%         #brod_produce_reply{ call_ref = CallRef, result   = brod_produce_req_acked} -> ok
-%     after 5000 ->
-%         ct:fail({?MODULE, ?LINE, timeout})
-%     end, 
-%     {ok, Message}.
 
 %% Called when the plugin application start
 load(Env) ->
