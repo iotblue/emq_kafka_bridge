@@ -24,10 +24,6 @@
         , unload/0
         ]).
 
-register_metrics() ->
-    [emqx_metrics:new(MetricName) || MetricName <- ['bridge.kafka.connected', 'bridge.kafka.disconnected', 'bridge.kafka.publish']].
-
-
 %% Hooks functions
 -export([ 
         % on_client_authenticate/2
@@ -46,6 +42,10 @@ register_metrics() ->
         , on_message_acked/3
         , on_message_dropped/3
         ]).
+
+register_metrics() ->
+    [emqx_metrics:new(MetricName) || MetricName <- ['bridge.kafka.connected', 'bridge.kafka.disconnected', 'bridge.kafka.publish']].
+
 
 brod_load(_Env) ->
     {ok, _} = application:ensure_all_started(gproc),
