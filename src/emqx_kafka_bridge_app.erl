@@ -16,9 +16,11 @@
 
 -module(emqx_kafka_bridge_app).
 
--behaviour(application).
-
 -include("emqx_kafka_bridge.hrl").
+
+-emqx_plugin(bridge).
+
+-behaviour(application).
 
 %% Application callbacks
 -export([start/2, stop/1]).
@@ -29,6 +31,5 @@ start(_StartType, _StartArgs) ->
     {ok, Sup}.
 
 stop(_State) ->
-    emqx_kafka_bridge:unload(),
-    ok.
+    emqx_kafka_bridge:unload().
 

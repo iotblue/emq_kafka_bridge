@@ -1,0 +1,7 @@
+{application,emqx_kafka_bridge,
+             [{description,"EMQ X KAFKA BRIDGE"},
+              {vsn,"git"},
+              {modules,[]},
+              {registered,[emqx_kafka_bridge_sup]},
+              {applications,[kernel,stdlib,brod,supervisor3]},
+              {mod,{emqx_kafka_bridge_app,[]}}]}.

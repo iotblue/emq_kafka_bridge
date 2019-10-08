@@ -1,26 +1,25 @@
-PROJECT = emqx_kafka_bridge
-PROJECT_DESCRIPTION = EMQ X Kafka Bridge
-PROJECT_VERSION = 3.0
+## shallow clone for speed
 
-DEPS = brod supervisor3
-dep_brod = git https://github.com/klarna/brod 3.7.9
-dep_supervisor3  = git-emqx https://github.com/klarna/supervisor3 1.1.8
+REBAR_GIT_CLONE_OPTIONS += --depth 1
+export REBAR_GIT_CLONE_OPTIONS
 
-BUILD_DEPS = emqx cuttlefish
-dep_emqx = git-emqx https://github.com/emqx/emqx emqx30
-dep_cuttlefish = git-emqx https://github.com/emqx/cuttlefish v2.2.1
+REBAR = rebar3
+all: compile
 
-ERLC_OPTS += +debug_info
-# ERLC_OPTS += +'{parse_transform, lager_transform}'
-# TEST_ERLC_OPTS += +'{parse_transform, lager_transform}'
+compile:
+	$(REBAR) compile
 
-NO_AUTOPATCH = cuttlefish
+ct: compile
+	$(REBAR) as test ct -v
 
-COVER = true
+eunit: compile
+	$(REBAR) as test eunit
 
-include erlang.mk
+xref:
+	$(REBAR) xref
 
-app:: rebar.config
+clean: distclean
 
-app.config::
-	./deps/cuttlefish/cuttlefish -l info -e etc/ -c etc/emqx_kafka_bridge.conf -i priv/emqx_kafka_bridge.schema -d data
+distclean:
+	@rm -rf _build
+	@rm -f data/app.*.config data/vm.*.args rebar.lock

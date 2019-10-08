@@ -1,44 +1,44 @@
 %%-*- mode: erlang -*-
 %% emqx_kafka_bridge config mapping
 
-{mapping, "kafka.bootstrap_broker_host", "emqx_kafka_bridge.broker", [
+{mapping, "bridge.bootstrap_broker_host", "emqx_kafka_bridge.bridges", [
   {default, "localhost"},
   {datatype, string}
 ]}.
-{mapping, "kafka.bootstrap_broker_port", "emqx_kafka_bridge.broker", [
+{mapping, "bridge.bootstrap_broker_port", "emqx_kafka_bridge.bridges", [
   {default, 9092},
   {datatype, integer}
 ]}.
 
-{mapping, "kafka.query_api_versions", "emqx_kafka_bridge.broker", [
+{mapping, "bridge.query_api_versions", "emqx_kafka_bridge.bridges", [
   {default, true},
   {datatype, {enum, [true, false]}}
 ]}.
 
-{mapping, "kafka.reconnect_cool_down_seconds", "emqx_kafka_bridge.broker", [
+{mapping, "bridge.reconnect_cool_down_seconds", "emqx_kafka_bridge.bridges", [
   {default, 10},
   {datatype, integer}
 ]}.
 
-{mapping, "kafka.producer_partition", "emqx_kafka_bridge.broker", [
+{mapping, "bridge.producer_partition", "emqx_kafka_bridge.bridges", [
   {default, 1},
   {datatype, integer}
 ]}.
 
 {
-  translation, "emqx_kafka_bridge.broker", 
+  translation, "emqx_kafka_bridge.bridges", 
     fun(Conf) ->
-      KafkaBootstrapBrokerHost = cuttlefish:conf_get("kafka.bootstrap_broker_host", Conf),
-      KafkaBootstrapBrokerPort = cuttlefish:conf_get("kafka.bootstrap_broker_port", Conf),
-      KafkaQueryApiVersions = cuttlefish:conf_get("kafka.query_api_versions", Conf),
-      KafkaReconnectCoolDownSeconds = cuttlefish:conf_get("kafka.reconnect_cool_down_seconds", Conf),
-      KafkaProducerPartition = cuttlefish:conf_get("kafka.producer_partition", Conf),
+      KafkaBootstrapBrokerHost      = cuttlefish:conf_get("bridge.bootstrap_broker_host"      , Conf),
+      KafkaBootstrapBrokerPort      = cuttlefish:conf_get("bridge.bootstrap_broker_port"      , Conf),
+      KafkaQueryApiVersions         = cuttlefish:conf_get("bridge.query_api_versions"         , Conf),
+      KafkaReconnectCoolDownSeconds = cuttlefish:conf_get("bridge.reconnect_cool_down_seconds", Conf),
+      KafkaProducerPartition        = cuttlefish:conf_get("bridge.producer_partition"         , Conf),
       [
-        {bootstrap_broker_host, KafkaBootstrapBrokerHost}, 
-        {bootstrap_broker_port, KafkaBootstrapBrokerPort}, 
-        {query_api_versions, KafkaQueryApiVersions}, 
+        {bootstrap_broker_host      , KafkaBootstrapBrokerHost}, 
+        {bootstrap_broker_port      , KafkaBootstrapBrokerPort}, 
+        {query_api_versions         , KafkaQueryApiVersions}, 
         {reconnect_cool_down_seconds, KafkaReconnectCoolDownSeconds}, 
-        {producer_partition, KafkaProducerPartition}
+        {producer_partition         , KafkaProducerPartition}
       ]
     end
 }.
