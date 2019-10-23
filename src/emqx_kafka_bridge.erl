@@ -24,6 +24,8 @@
         , unload/0
         ]).
 
+
+
 %% Hooks functions
 -export([ 
         % on_client_authenticate/2
@@ -57,17 +59,17 @@ brod_load(_Env) ->
     ClientConfig = [{auto_start_producers, true}, {default_producer_config, []}, {reconnect_cool_down_seconds, 10}, {reconnect_cool_down_seconds, 10}],
     ok = brod:start_client(KafkaBootstrapEndpoints, brod_client_1, ClientConfig),
     ok = brod:start_producer(brod_client_1, <<"message_publish">>, _ProducerConfig = []),
-    emqx_metrics:inc('bridge.kafka.connected'),
+    % emqx_metrics:inc('bridge.kafka.connected'),
     io:format("load brod with ~p~n", [KafkaBootstrapEndpoints]).
 
 brod_unload() ->
     application:stop(brod),
-    emqx_metrics:inc('bridge.kafka.disconnected'),
+    % emqx_metrics:inc('bridge.kafka.disconnected'),
     io:format("unload brod~n"),
     ok.
 
 getPartition(Key) ->
-    {ok, Kafka} = application:get_env(?MODULE, broker),
+    {ok, Kafka} = application:get_env(?MODULE, bridges),
     PartitionNum = proplists:get_value(producer_partition, Kafka),
     <<Fix:120, Match:8>> = crypto:hash(md5, Key),
     abs(Match) rem PartitionNum.
@@ -78,7 +80,7 @@ produce_kafka_message(Topic, Message, ClientId, _Env) ->
     Message1 = jsx:encode(Message),
     ?LOG(error, "Topic:~p, params:~p", [Topic, Message1]),
     ok = brod:produce_sync(brod_client_1, Topic, Partition, ClientId, Message1),
-    emqx_metrics:inc('bridge.kafka.publish'),
+    % emqx_metrics:inc('bridge.kafka.publish'),
     ok.
 
 %% Called when the plugin application start
